@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "format": "gzip+base64",
+  "sha256": "887d3494f4ec1fd4b2952ca80be74a1250e216e5b7395ca77aca80a1b87bc149",
+  "bytes": 121702,
+  "parts": [
+    {"file":"part-01.b64","sha256":"0f04a77ddfd9d6eb449161aaa301818c6bdb388a707a0c9d18452bdfa60948b5"},
+    {"file":"part-02.b64","sha256":"3ffef6b988c1e16be794464d45eb895eb8d085b0242fea821e63a5799c9a5494"},
+    {"file":"part-03.b64","sha256":"13c86f3034077c4efa5ce004052db29685247b2484b5eff3f5e0e399aa68de06"},
+    {"file":"part-04.b64","sha256":"d48073da2af2d4066944723a41068ebf6cc588ce63d7ed31a62e4df75c959ed6"},
+    {"file":"part-05.b64","sha256":"49fd3c30f04f0d65145eee8fdfb4e2138c73a548ec4f70131a869b7e06f5f1ae"},
+    {"file":"part-06.b64","sha256":"e957ebf9dac7464a1c5a60843a997f87267940e86c2180b20fa9003225f999d2"},
+    {"file":"part-07.b64","sha256":"c201b670f071f5de52f53a1f201a0cbe379d4bf9dec0f893ca78c434e5c721a9"},
+    {"file":"part-08.b64","sha256":"37dbba69b28ce4a6092f67c373a90f0716fe1cf4590b778c2e125d55c62e54fc"}
+  ]
+}
