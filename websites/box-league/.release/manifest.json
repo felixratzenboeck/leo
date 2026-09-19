@@ -1,0 +1,15 @@
+{
+  "version": "1.1.0",
+  "size": 132166,
+  "sha256": "9ef17b4635bac6c27fdf1ec9cc251caee9ac1f4766dca29cf4f6bd34963a0b91",
+  "git_blob": "5916afe19267e61be1025333eb87dfe845a20562",
+  "parts": [
+    {"file":"part-01.b64","bytes":8001,"git_blob":"79c840cd34a33256e614cf3f32e1d8401e78932f"},
+    {"file":"part-02.b64","bytes":8001,"git_blob":"221dc46a116ae1ea40d364517f809e7003eb97fa"},
+    {"file":"part-03.b64","bytes":8001,"git_blob":"dacb1a967a3f95ca5fc53010d353e9b427361ede"},
+    {"file":"part-04.b64","bytes":8001,"git_blob":"059c285fc692af0c396ef20864abae9b5a76472d"},
+    {"file":"part-05.b64","bytes":8001,"git_blob":"8c4d4517396ce1b40dbbc7c3717b74c2b9961370"},
+    {"file":"part-06.b64","bytes":8001,"git_blob":"553c290785837e106aa010b08da14f6b6b1fe68b"},
+    {"file":"part-07.b64","bytes":3129,"git_blob":"178a41e143214facaf1328f2761ba0ea5fe62f09"}
+  ]
+}

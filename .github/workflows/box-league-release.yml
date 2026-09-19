@@ -1,0 +1,43 @@
+name: BOX LEAGUE verified HTML release
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'websites/box-league/.release/**'
+      - '.github/workflows/box-league-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: box-league-html-release
+  cancel-in-progress: false
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - name: Restore checksum-verified original HTML
+        run: python3 websites/box-league/.release/restore.py
+      - name: Verify embedded JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess, tempfile
+          html = Path('websites/box-league/public/index.html').read_text()
+          for script in re.findall(r'<script[^>]*>(.*?)</script>', html, re.S):
+              with tempfile.NamedTemporaryFile(mode='w', suffix='.js') as f:
+                  f.write(script)
+                  f.flush()
+                  subprocess.run(['node', '--check', f.name], check=True)
+          PY
+      - name: Commit only the verified game file
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- websites/box-league/public/index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'feat(box-league): publish verified standalone P2P game 1.1.0'
+          git pull --rebase origin main
+          git push origin HEAD:main
