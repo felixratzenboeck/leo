@@ -1,0 +1,48 @@
+name: BONK LEAGUE public URL verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/bonk-league-live-check.yml'
+      - 'games/bonk-league/index.html'
+  workflow_dispatch:
+permissions: {}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify public HTTPS game and exact original SHA256
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import time
+          import urllib.request
+          url = 'https://felixratzenboeck.github.io/leo/games/bonk-league/'
+          expected = '889d1d2bedfe7843e9e77738fafca56c084dad50f457f50f6b1a2cd1fa496bcc'
+          last_error = None
+          for attempt in range(36):
+              try:
+                  request = urllib.request.Request(url + '?verify=889d1d2bedfe', headers={'Cache-Control': 'no-cache', 'User-Agent': 'BONK-League-Publication-Check'})
+                  with urllib.request.urlopen(request, timeout=10) as response:
+                      if response.status != 200:
+                          raise ValueError('HTTP status is not 200')
+                      if response.headers.get_content_type() != 'text/html':
+                          raise ValueError('Response is not HTML')
+                      content = response.read(200000)
+                  if len(content) != 107634:
+                      raise ValueError('Unexpected HTML size: ' + str(len(content)))
+                  actual = hashlib.sha256(content).hexdigest()
+                  if actual != expected:
+                      raise ValueError('Public HTML differs from original: ' + actual)
+                  print('PASS: public game HTTP 200; Content-Type text/html; exact original 107634 bytes')
+                  print('URL: ' + url)
+                  print('SHA256: ' + actual)
+                  break
+              except Exception as error:
+                  last_error = error
+                  print('Not yet verified, attempt ' + str(attempt + 1) + ': ' + str(error), flush=True)
+                  time.sleep(5)
+          else:
+              raise SystemExit('Public deployment could not be verified: ' + str(last_error))
+          PY
