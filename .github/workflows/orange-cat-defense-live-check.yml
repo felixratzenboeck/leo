@@ -1,0 +1,44 @@
+name: Orange Cat Defense V2 public URL check
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'games/orange-cat-defense/README.md'
+      - 'games/orange-cat-defense/index.html'
+      - '.github/workflows/orange-cat-defense-live-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: orange-cat-defense-public-check
+  cancel-in-progress: true
+jobs:
+  public-url:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Verify public Pages HTML matches the tested release
+        run: |
+          python3 -u - <<'PY'
+          import hashlib, time, urllib.request
+          url = 'https://felixratzenboeck.github.io/leo/games/orange-cat-defense/'
+          expected = '887d3494f4ec1fd4b2952ca80be74a1250e216e5b7395ca77aca80a1b87bc149'
+          deadline = time.monotonic() + 330
+          while time.monotonic() < deadline:
+              try:
+                  req = urllib.request.Request(url + '?verify=' + str(time.time_ns()), headers={'Cache-Control': 'no-cache', 'User-Agent': 'LEO-V2-release-verification'})
+                  with urllib.request.urlopen(req, timeout=20) as response:
+                      status = response.status
+                      data = response.read()
+                  sha = hashlib.sha256(data).hexdigest()
+                  if status == 200 and len(data) == 121702 and sha == expected:
+                      print('VERIFIED PUBLIC URL:', url)
+                      print('HTTP:', status, 'BYTES:', len(data), 'SHA256:', sha)
+                      break
+                  print('Waiting for current deployment:', status, len(data), sha)
+              except Exception as exc:
+                  print('Waiting for Pages:', type(exc).__name__, str(exc))
+              time.sleep(12)
+          else:
+              raise SystemExit('Public Pages verification did not succeed within 330 seconds')
+          PY
