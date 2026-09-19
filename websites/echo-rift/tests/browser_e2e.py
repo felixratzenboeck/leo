@@ -123,6 +123,8 @@ with sync_playwright() as p:
             page.uncheck('#autoFire')
         ok('real WebRTC handshake and synchronized match start')
         before = host.evaluate('EchoApp.state.players[1].y')
+        # A checkbox retains keyboard focus; return focus just as a player does.
+        guest.locator('#arena').focus()
         guest.keyboard.down('KeyW')
         guest.wait_for_timeout(450)
         guest.keyboard.up('KeyW')
