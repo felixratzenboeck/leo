@@ -1,0 +1,88 @@
+name: LUNA release verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'websites/luna/release/**'
+      - '.github/workflows/luna-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: luna-release
+  cancel-in-progress: false
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Verify and unpack exact source release
+        run: |
+          python - <<'PY'
+          import base64, hashlib, io, json, os, re, tarfile
+          from pathlib import Path
+          base = Path('websites/luna').resolve()
+          parts = sorted((base / 'release').glob('part-*.b64'))
+          assert [p.name for p in parts] == [f'part-{i:02}.b64' for i in range(6)]
+          # Correct the verified two-character text-transport duplication, not app code.
+          p = base / 'release/part-02.b64'
+          b = p.read_bytes()
+          blob = hashlib.sha1(b'blob ' + str(len(b)).encode() + b'\0' + b).hexdigest()
+          if blob == 'ef67e16783898884f78bcc2d92e250c318270466':
+              b = b.replace(b'Qr1yKFzFzF4jPgx', b'Qr1yKFzF4jPgx')
+              p.write_bytes(b)
+          assert hashlib.sha1(b'blob ' + str(len(b)).encode() + b'\0' + b).hexdigest() == '51a78555d8f6c8f06c7f1553544bc90cb16fdc0b'
+          raw = base64.b64decode(''.join(p.read_text().strip() for p in parts), validate=True)
+          assert hashlib.sha256(raw).hexdigest() == 'c6b8ca9dc1ca5973bfa7c92f4aeecf065574f7256b37c34d329c608e5ba8790e'
+          allowed = {'public/index.html', 'public/manifest.webmanifest', 'public/sw.js', 'public/icon-192.png', 'public/icon-512.png', 'tests/test_live.py', 'README.md', 'TESTING-LOCAL.json', 'SHA256SUMS.json'}
+          with tarfile.open(fileobj=io.BytesIO(raw), mode='r:xz') as archive:
+              members = archive.getmembers()
+              assert len(members) == len(allowed) and {m.name for m in members} == allowed
+              assert all(m.isfile() for m in members) and sum(m.size for m in members) < 2000000
+              for member in members:
+                  dest = (base / member.name).resolve()
+                  assert dest.is_relative_to(base)
+                  data = archive.extractfile(member).read()
+                  if dest.exists():
+                      assert dest.read_bytes() == data, f'Refusing to overwrite modified source: {member.name}'
+                  dest.parent.mkdir(parents=True, exist_ok=True)
+                  dest.write_bytes(data)
+          for name, expected in json.loads((base / 'SHA256SUMS.json').read_text()).items():
+              assert name in allowed
+              assert hashlib.sha256((base / name).read_bytes()).hexdigest() == expected, name
+          html = (base / 'public/index.html').read_text()
+          scripts = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', html, re.I)
+          Path(os.environ['RUNNER_TEMP'], 'luna-app-check.js').write_text('\n'.join(scripts))
+          print('Archive and all eight source hashes verified.')
+          PY
+          node --check "$RUNNER_TEMP/luna-app-check.js"
+          node --check websites/luna/public/sw.js
+      - name: Install browser test tools
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium firefox webkit
+      - name: Test real browser storage and offline loading
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory websites/luna/public > "$RUNNER_TEMP/luna-http.log" 2>&1 &
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent http://127.0.0.1:8765/ > /dev/null; then break; fi
+            sleep 1
+          done
+          python websites/luna/tests/test_live.py
+      - name: Publish readable sources and verification report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- websites/luna/public websites/luna/tests/test_live.py websites/luna/README.md websites/luna/TESTING-LOCAL.json websites/luna/TESTING-CI.json websites/luna/SHA256SUMS.json websites/luna/release/part-02.b64
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'feat(luna): publish verified mobile app and offline PWA'
+          for attempt in 1 2 3 4; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
