@@ -1,0 +1,23 @@
+'use strict';
+const assert=require('node:assert/strict');require('../public/engine.js');
+const {Game,MAPS,STEP,circleRect,lineRect}=EchoEngine;let checks=0;
+function test(name,fn){fn();console.log('PASS',name);checks++;}
+function ready(opts={}){const g=new Game({seed:123,...opts});g.countdown=0;g.players.forEach(p=>p.inv=0);return g;}
+test('Three different arenas and valid free spawns',()=>{assert.equal(MAPS.length,3);for(let map=0;map<3;map++){let g=ready({map});for(const p of g.players)assert(g.free(p.x,p.y));}});
+test('Countdown freezes simulation',()=>{let g=new Game();g.step([{x:1,fire:true}]);assert.equal(g.t,0);assert.equal(g.players[0].shots,0);});
+test('Movement and diagonal speed normalized',()=>{let a=ready(),b=ready();a.step([{x:1,y:0}]);b.step([{x:1,y:1}]);assert(Math.abs(Math.hypot(a.players[0].x-174,a.players[0].y-220)-Math.hypot(b.players[0].x-174,b.players[0].y-220))<1e-6);});
+test('Wall and arena collisions, including dash',()=>{let g=ready();for(let i=0;i<100;i++)g.step([{x:1,y:0,dash:i===0}]);let p=g.players[0];assert(p.x<=260.0001);assert(!MAPS[0].walls.some(o=>circleRect(p.x,p.y,17.999,o)));for(let i=0;i<150;i++)g.step([{x:-1}]);assert(p.x>=72);});
+test('Echo repeats recorded shots with reduced damage',()=>{let g=ready();for(let i=0;i<125;i++)g.step([{x:0,y:0,a:1,fire:i%20===0}]);assert.equal(g.players[0].history.length,120);g.step([{echo:true}]);assert.equal(g.echoes.length,1);for(let i=0;i<30;i++)g.step([{}]);assert(g.bullets.some(b=>b.echo));assert(g.players[0].echoCd>7);});
+test('No early echo and cooldown enforced',()=>{let g=ready();assert(!g.activateEcho(g.players[0]));for(let i=0;i<40;i++)g.step([{}]);assert(g.activateEcho(g.players[0]));assert(!g.activateEcho(g.players[0]));});
+test('Portal teleports a player and guards against immediate bounce back',()=>{let g=ready();Object.assign(g.players[0],{x:104,y:380});g.step([{}]);assert(g.players[0].x>1000);assert.equal(g.players[0].portalTrips,1);g.step([{}]);assert.equal(g.players[0].portalTrips,1);});
+test('Projectile portal uses corresponding exit',()=>{let g=ready();g.spawnBullet(0,104,380-26,Math.PI/2);g.step([{}]);assert(g.bullets[0].x>1000);});
+test('Damage, knock-out, scores and invulnerability',()=>{let g=ready();g.damage(g.players[1],26,0);assert.equal(g.players[1].hp,74);g.damage(g.players[1],26,0);assert.equal(g.players[1].hp,74);g.players[1].inv=0;g.damage(g.players[1],100,0,true);assert.equal(g.players[0].score,1);assert.equal(g.players[0].echoKills,1);assert(g.players[1].respawn>0);});
+test('Respawn resets health and grants protection',()=>{let g=ready();g.damage(g.players[1],100,0);for(let i=0;i<95;i++)g.step([{}]);assert.equal(g.players[1].hp,100);assert(g.players[1].inv>0);});
+test('Dash reflects projectiles, changes ownership and increases damage',()=>{let g=ready({map:2}),p=g.players[0];Object.assign(p,{x:600,y:380,a:0,dashTime:.1,dashX:1,dashY:0});g.bullets.push({id:9,x:625,y:380,vx:-200,vy:0,owner:1,echo:false,life:2,bounces:2,damage:26,portalCd:0});g.step([{}]);assert.equal(g.bullets[0].owner,0);assert.equal(g.bullets[0].damage,32);assert.equal(p.parries,1);});
+test('Power-ups heal, split and accelerate',()=>{for(let type=0;type<3;type++){let g=ready(),p=g.players[0];p.hp=50;g.pickups.push({id:1,x:p.x,y:p.y,type,ttl:10});g.step([{}]);if(!type)assert.equal(p.hp,88);else assert.equal(p.buff,type);assert.equal(g.pickups.length,0);}});
+test('Target victory ends match',()=>{let g=ready({target:3});g.players[0].score=2;g.damage(g.players[1],100,0);assert(g.done);assert.equal(g.winner,0);});
+test('Time-limit leader wins; ties enter sudden death',()=>{let a=ready(),b=ready();a.t=b.t=180;a.players[1].score=1;a.step([]);b.step([]);assert.equal(a.winner,1);assert(b.sudden);assert(!b.done);b.players[0].inv=0;b.damage(b.players[0],100,1);assert(b.done);});
+test('Wall line-of-sight utility',()=>{assert(lineRect(0,5,20,5,{x:8,y:0,w:4,h:10}));assert(!lineRect(0,20,20,20,{x:8,y:0,w:4,h:10}));});
+test('Snapshot has no recordings and is JSON serializable',()=>{let g=ready();g.step([{}]);let s=g.snapshot();assert(!('history' in s.players[0]));assert(JSON.stringify(s).length<60000);});
+test('Bots complete seeded matches on every arena without invalid states',()=>{for(let map=0;map<3;map++){let g=ready({map,target:3,difficulty:1});for(let i=0;i<12000&&!g.done;i++){g.step([g.bot(0),g.bot(1)]);for(const p of g.players){assert(Number.isFinite(p.x+p.y+p.hp));assert(p.x>=71.99&&p.x<=1128.01);assert(p.hp>=0&&p.hp<=100);}g.events=[];}console.log(' arena',map,'t',g.t.toFixed(1),'scores',g.players.map(p=>p.score).join(':'));assert(g.done);}});
+console.log('ENGINE:',checks,'tests passed.');
