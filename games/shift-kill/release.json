@@ -1,0 +1,20 @@
+{
+  "schema": "shift-kill.release.v1",
+  "version": "2.0.0-demo",
+  "release_date": "2026-09-19",
+  "canonical_file": "index.html",
+  "source_commit": "9543baafa50cd142bd436887a32a7251893d3977",
+  "bytes": 130082,
+  "sha256": "869b9ee97e420947db9bf6d5e61a65fe1e7afd9378be3c98a630afffe81eea94",
+  "git_blob_sha1": "3a191c816ace4e61bd406eaa30c18f4bca277e71",
+  "protocol": "SK2",
+  "paid_checkout_enabled": false,
+  "admin_authorization": "public simulation only",
+  "match_authority": "host-authoritative WebRTC; not trustless",
+  "tests": {
+    "local_assertions_passed": 56,
+    "protocol_transport": "in-memory test channels",
+    "real_webrtc_connection_verified": false,
+    "safari_ios_verified": false
+  }
+}
