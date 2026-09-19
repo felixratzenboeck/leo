@@ -1,0 +1,10 @@
+{
+  "name": "BONK! LEAGUE",
+  "source": "BONK-LEAGUE.html",
+  "destination": "games/bonk-league/index.html",
+  "transport": "XZ-compressed original UTF-8 HTML, base64 split into six text files",
+  "parts": ["part-00.b64", "part-01.b64", "part-02.b64", "part-03.b64", "part-04.b64", "part-05.b64"],
+  "bytes": 107634,
+  "sha256": "889d1d2bedfe7843e9e77738fafca56c084dad50f457f50f6b1a2cd1fa496bcc",
+  "git_blob_sha": "802fa24d2786d7d2cf8f629268d99139f7ad907f"
+}
