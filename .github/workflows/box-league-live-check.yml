@@ -1,0 +1,41 @@
+name: BOX LEAGUE public URL verification
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/box-league-live-check.yml']
+  workflow_dispatch:
+permissions: {}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify public game HTTP 200 and exact SHA256
+        run: |
+          python3 - <<'PY'
+          import hashlib, time, urllib.request
+          base = 'https://felixratzenboeck.github.io/leo/'
+          expected = '9ef17b4635bac6c27fdf1ec9cc251caee9ac1f4766dca29cf4f6bd34963a0b91'
+          last = None
+          for attempt in range(10):
+              try:
+                  request = urllib.request.Request(base + 'websites/box-league/public/index.html?verify=1.1.0', headers={'Cache-Control': 'no-cache'})
+                  with urllib.request.urlopen(request, timeout=10) as response:
+                      assert response.status == 200
+                      assert response.headers.get_content_type() == 'text/html'
+                      game = response.read(200000)
+                  assert len(game) == 132166, 'Unexpected HTML size'
+                  assert hashlib.sha256(game).hexdigest() == expected, 'Published HTML differs'
+                  with urllib.request.urlopen(base + 'box-league/', timeout=10) as response:
+                      assert response.status == 200
+                      alias = response.read(5000).decode('utf-8')
+                  assert '../websites/box-league/public/' in alias and 'target.hash=location.hash' in alias
+                  print('PASS: both public URLs return HTTP 200; game is exactly 132166 bytes; SHA256 ' + expected)
+                  break
+              except Exception as error:
+                  last = error
+                  print('Not yet verified:', type(error).__name__, str(error))
+                  time.sleep(5)
+          else:
+              raise SystemExit('Public deployment verification failed: ' + str(last))
+          PY
