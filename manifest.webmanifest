@@ -1,0 +1,1 @@
+{"id":"./","name":"Leo Studio — Dein Lernraum","short_name":"Leo","description":"Notizen, Aufgaben und Lernen. Lokal gespeichert.","lang":"de-AT","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#f6f5fb","theme_color":"#7054e8","icons":[{"src":"./leo-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
