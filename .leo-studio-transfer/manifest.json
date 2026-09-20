@@ -1,0 +1,16 @@
+{
+  "format": "leo-reviewed-source/1",
+  "archive_sha256": "8cf74a1341d4ed00595886a0121c7ce06d2937eff76a8938cdb0c351c5b4edcd",
+  "uncompressed_bytes": 92743,
+  "parts": ["source-00.b64", "source-01.b64", "source-02.b64", "source-03.b64", "source-04.b64", "source-05.b64"],
+  "files": {
+    "leo-src/theme.css": "6253620b17a9f23cf5338c2e1b7ed22dfa7d3d458c567598b4308f9a5d209785",
+    "leo-src/studio.js": "e91d588c3d5f0ac0efaa3f8ce0bd64e809cfdffccc34e1597ea8e01ef0084530",
+    "leo-src/service-worker.js": "f82c2dcec2df30139e4d17f7b36a975c1fcf2fb1d0a23f813f4ecf9d7d5e97bc",
+    "scripts/build-leo.py": "32fa24bb7c5bd2bf960f0f718011573ea3027e7ef161741902e207a8decac92b",
+    "tests/leo-e2e.py": "6b4ba43f4a64eeb33878166b4a6e9a157febefdeab7521453ad18e1b9bf8897e",
+    "manifest.webmanifest": "8c1d3fdff22caf8d695df727463689e902213069cf14ed9f37437f9f0005655a",
+    "leo-icon.svg": "dd3b5afd065558f363d3fb6a2d65e827b4f73b4ce37220cb10c714eca9a43923",
+    "docs/leo-studio-v2.md": "b2d677eae67a278e4a8eac010280b5fef2eb32b1d350bacc6bcfed43a8864596"
+  }
+}
